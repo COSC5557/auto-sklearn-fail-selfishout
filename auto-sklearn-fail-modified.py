@@ -48,7 +48,7 @@ print(f"Random Forest with SMOTE cross-validation accuracy: {rf_cv_scores_smote.
 
 
 automl = AutoSklearnClassifier(
-    time_left_for_this_task=360,  # 6 minutes
+    time_left_for_this_task=300,  # 5 minutes
     memory_limit=10240,  
     resampling_strategy='cv',
     resampling_strategy_arguments={'folds': 5},
@@ -70,14 +70,14 @@ print(automl.sprint_statistics())
 
 
 # Results:
-# Random Forest with SMOTE cross-validation accuracy: 0.6294
+# Random Forest with SMOTE cross-validation accuracy: 0.6239
 # AutoML Accuracy on test set: 0.684375
 # auto-sklearn results:
-  # Dataset name: 8ccd64a6-7f30-11ee-998c-0242ac1c000c
+  # Dataset name: cf110c42-84df-11ee-9468-0242ac1c000c
   # Metric: accuracy
-  # Best validation score: 0.679437
-  # Number of target algorithm runs: 26
-  # Number of successful target algorithm runs: 12
-  # Number of crashed target algorithm runs: 8
-  # Number of target algorithms that exceeded the time limit: 6
+  # Best validation score: 0.683346
+  # Number of target algorithm runs: 81
+  # Number of successful target algorithm runs: 61
+  # Number of crashed target algorithm runs: 16
+  # Number of target algorithms that exceeded the time limit: 4
   # Number of target algorithms that exceeded the memory limit: 0
