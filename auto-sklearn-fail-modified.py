@@ -1,83 +1,48 @@
 # Modified Version
+import sklearn.model_selection
 from sklearn.datasets import fetch_openml
-from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
+import sklearn.metrics
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.metrics import accuracy_score
-from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import make_pipeline as make_imblearn_pipeline
-from autosklearn.classification import AutoSklearnClassifier
-from sklearn import preprocessing
-
+from sklearn.preprocessing import OneHotEncoder
 
 X, y = fetch_openml(data_id=40691, as_frame=True, return_X_y=True)
+enc = OneHotEncoder(handle_unknown='ignore')
+# X = enc.fit_transform(X)
 
+X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y, random_state=42)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+clf = RandomForestClassifier(random_state=42)
+clf = clf.fit(X_train, y_train)
+y_hat = clf.predict(X_test)
+print("RF Accuracy", sklearn.metrics.accuracy_score(y_test, y_hat))
 
+from autosklearn.classification import AutoSklearnClassifier
 
-preprocessor = ColumnTransformer(
-    transformers=[
-        ('num', StandardScaler(), [i for i in range(X_train.select_dtypes(include=['int', 'float']).shape[1])]),
-        ('cat', preprocessing.OneHotEncoder(handle_unknown='ignore'), [i for i in range(X_train.select_dtypes(include=['category', 'object']).shape[1])])
-    ]
-)
-
-rf_pipeline = Pipeline([
-    ('preprocessor', preprocessor),
-    ('imputer', SimpleImputer(strategy='mean')),
-    ('classifier', RandomForestClassifier(random_state=42))
-])
-
-cv = StratifiedKFold(n_splits=5)
-rf_cv_scores = cross_val_score(rf_pipeline, X_train, y_train, cv=cv, scoring='accuracy')
-
-print(f"Random Forest cross-validation accuracy: {rf_cv_scores.mean():.4f}")
-
-oversample_pipeline = make_imblearn_pipeline(
-    SMOTE(),
-    rf_pipeline
-)
-
-
-rf_cv_scores_smote = cross_val_score(oversample_pipeline, X_train, y_train, cv=cv, scoring='accuracy')
-print(f"Random Forest with SMOTE cross-validation accuracy: {rf_cv_scores_smote.mean():.4f}")
-
-
-automl = AutoSklearnClassifier(
-    time_left_for_this_task=300,  # 5 minutes
-    memory_limit=10240,  
-    resampling_strategy='cv',
-    resampling_strategy_arguments={'folds': 5},
-    ensemble_size=1,  
-    seed=42,  
-    n_jobs=-1  
-)
-
-
+automl = AutoSklearnClassifier(time_left_for_this_task=300,
+                               resampling_strategy='cv',
+                               # resampling_strategy_arguments={'folds': 5},
+                               memory_limit=6000,
+                               # ensemble_size=1,
+                               # ensemble_nbest=100,
+                               per_run_time_limit=50
+                               #delete_tmp_folder_after_terminate=False,
+                               # n_jobs=1
+                               )
 automl.fit(X_train, y_train)
-
-
-y_hat_automl = automl.predict(X_test)
-print("AutoML Accuracy on test set:", accuracy_score(y_test, y_hat_automl))
-
-
+y_hat = automl.predict(X_test)
+print("AutoML Accuracy", sklearn.metrics.accuracy_score(y_test, y_hat))
 print(automl.sprint_statistics())
 
 
-
 # Results:
-# Random Forest with SMOTE cross-validation accuracy: 0.6239
-# AutoML Accuracy on test set: 0.684375
+# RF Accuracy 0.67
+# AutoML Accuracy 0.68
 # auto-sklearn results:
-  # Dataset name: cf110c42-84df-11ee-9468-0242ac1c000c
-  # Metric: accuracy
-  # Best validation score: 0.683346
-  # Number of target algorithm runs: 81
-  # Number of successful target algorithm runs: 61
-  # Number of crashed target algorithm runs: 16
-  # Number of target algorithms that exceeded the time limit: 4
-  # Number of target algorithms that exceeded the memory limit: 0
+# Dataset name: cffadd39-8e6c-11ee-962d-0242ac1c000c
+# Metric: accuracy
+# Best validation score: 0.686405
+# Number of target algorithm runs: 14
+# Number of successful target algorithm runs: 11
+# Number of crashed target algorithm runs: 0
+# Number of target algorithms that exceeded the time limit: 3
+# Number of target algorithms that exceeded the memory limit: 0
