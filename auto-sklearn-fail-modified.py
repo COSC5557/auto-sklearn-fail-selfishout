@@ -6,6 +6,51 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import OneHotEncoder
 
 X, y = fetch_openml(data_id=40691, as_frame=True, return_X_y=True)
+
+print(y)
+class_distribution = y.value_counts()
+print("class_distribution")
+print(class_distribution)
+
+
+def check_imbalance(y):
+    # Calculate the class distribution
+    class_distribution = y.value_counts()
+    total_count = class_distribution.sum()
+
+    # Calculate the percentage of each class
+    class_percentage = (class_distribution / total_count) * 100
+
+    # Determine if the dataset is imbalanced
+    imbalance = any(class_percentage < 20)  # Threshold of 20%
+
+    return class_percentage, imbalance
+
+
+
+class_percentage, is_imbalanced = check_imbalance(y)
+print("Class Distribution (%):\n", class_percentage)
+print("\nIs the dataset imbalanced?", is_imbalanced)
+
+
+class_distribution = y.value_counts()
+class_distribution_percent = (class_distribution / class_distribution.sum()) * 100
+
+
+# Plotting the class distribution
+plt.figure(figsize=(8, 6))
+class_distribution_percent.plot(kind='bar', color='skyblue')
+plt.title('Class Distribution in Wine Dataset (%)')
+plt.xlabel('Class')
+plt.ylabel('Percentage')
+plt.xticks(rotation=0)
+plt.grid(axis='y')
+plt.show()
+
+
+
+
+
 enc = OneHotEncoder(handle_unknown='ignore')
 # X = enc.fit_transform(X)
 
