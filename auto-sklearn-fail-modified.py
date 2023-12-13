@@ -4,6 +4,8 @@ from sklearn.datasets import fetch_openml
 import sklearn.metrics
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import accuracy_score
+from autosklearn.classification import AutoSklearnClassifier
 
 X, y = fetch_openml(data_id=40691, as_frame=True, return_X_y=True)
 
@@ -61,33 +63,30 @@ clf = clf.fit(X_train, y_train)
 y_hat = clf.predict(X_test)
 print("RF Accuracy", sklearn.metrics.accuracy_score(y_test, y_hat))
 
-from autosklearn.classification import AutoSklearnClassifier
+automl = AutoSklearnClassifier(time_left_for_this_task=360)
+automl.fit(X_train, y_train)
 
-automl = AutoSklearnClassifier(time_left_for_this_task=300,
-                               resampling_strategy='cv',
-                               # resampling_strategy_arguments={'folds': 5},
-                               memory_limit=6000,
-                               # ensemble_size=1,
-                               # ensemble_nbest=100,
-                               per_run_time_limit=50
-                               #delete_tmp_folder_after_terminate=False,
-                               # n_jobs=1
+y_train_pred_automl = automl.predict(X_train)
+y_test_pred_automl = automl.predict(X_test)
+
+print("Training Accuracy AutoML Simple:"accuracy_score(y_train, y_train_pred_automl))
+print("Test Accuracy AutoML Simple:", accuracy_score(y_test, y_test_pred_automl))
+
+
+automl = AutoSklearnClassifier(time_left_for_this_task=360, resampling_strategy='cv'
+                               #resampling_strategy_arguments={'folds': 5}
                                )
 automl.fit(X_train, y_train)
 y_hat = automl.predict(X_test)
-print("AutoML Accuracy", sklearn.metrics.accuracy_score(y_test, y_hat))
-print(automl.sprint_statistics())
+y_train_automl = cross_val_predict(automl, X_train, y_train, cv=5)
+automl_train_accuracy = sklearn.metrics.accuracy_score(y_train, y_train_automl)
+print("AutoML Training Accuracy:", automl_train_accuracy)
+print("AutoML Test Accuracy", accuracy_score(y_test, y_hat))
 
 
 # Results:
-# RF Accuracy 0.67
-# AutoML Accuracy 0.68
-# auto-sklearn results:
-# Dataset name: cffadd39-8e6c-11ee-962d-0242ac1c000c
-# Metric: accuracy
-# Best validation score: 0.686405
-# Number of target algorithm runs: 14
-# Number of successful target algorithm runs: 11
-# Number of crashed target algorithm runs: 0
-# Number of target algorithms that exceeded the time limit: 3
-# Number of target algorithms that exceeded the memory limit: 0
+RF Accuracy: 0.6525
+Training Accuracy AutoML Simple: 0.890742285237698
+Test Accuracy AutoML Simple: 0.61
+AutoML Training Accuracy: 0.5821517931609674
+AutoML Test Accuracy 0.6475
